@@ -58,6 +58,11 @@ export default async function Home() {
               >
                 {session ? "Sign out" : "Sign in"}
               </Link>
+
+              <Link href={session ? "/dashboard" : "/profile"} className="">
+                Go to dashboard 
+              </Link>
+
             </div>
           </div>
 

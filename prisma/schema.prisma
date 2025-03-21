@@ -1,44 +1,78 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
     provider = "prisma-client-js"
 }
 
 datasource db {
     provider = "postgresql"
-    // NOTE: When using mysql or sqlserver, uncomment the @db.Text annotations in model Account below
-    // Further reading:
-    // https://next-auth.js.org/adapters/prisma#create-the-prisma-schema
-    // https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#string
     url      = env("DATABASE_URL")
 }
 
-model Post {
-    id        Int      @id @default(autoincrement())
-    name      String
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+model User {
+    id            String      @id @default(cuid())
+    name          String?
+    email         String?     @unique
+    emailVerified DateTime?
+    image         String?
+    password      String?
+    accounts      Account[]
+    sessions      Session[]
+    posts         Post[]
+    employer      Employer?
+    freelancer    Freelancer?
+}
 
-    createdBy   User   @relation(fields: [createdById], references: [id])
+model Employer {
+    id          String  @id @default(cuid())
+    companyName String
+    userId      String  @unique
+    user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+    jobPosts    Post[]
+}
+
+model Freelancer {
+    id          String  @id @default(cuid())
+    userId      String  @unique
+    user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+    skills      String[]
+    appliedJobs AppliedJob[]
+}
+
+model AppliedJob {
+    id           String      @id @default(cuid())
+    freelancerId String
+    postId       Int
+    freelancer   Freelancer @relation(fields: [freelancerId], references: [id], onDelete: Cascade)
+    post         Post       @relation(fields: [postId], references: [id], onDelete: Cascade)
+}
+
+model Post {
+    id        Int        @id @default(autoincrement())
+    name      String
+    createdAt DateTime   @default(now())
+    updatedAt DateTime   @updatedAt
     createdById String
+    createdBy   Employer @relation(fields: [createdById], references: [id])
+
+    appliedJobs AppliedJob[]
+
+    user User[]
 
     @@index([name])
 }
 
-// Necessary for Next auth
+// Necessary for NextAuth
 model Account {
     id                       String  @id @default(cuid())
     userId                   String
     type                     String
     provider                 String
     providerAccountId        String
-    refresh_token            String? // @db.Text
-    access_token             String? // @db.Text
+    refresh_token            String? 
+    access_token             String? 
     expires_at               Int?
     token_type               String?
     scope                    String?
-    id_token                 String? // @db.Text
+    id_token                 String? 
     session_state            String?
     user                     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
     refresh_token_expires_in Int?
@@ -52,17 +86,6 @@ model Session {
     userId       String
     expires      DateTime
     user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-model User {
-    id            String    @id @default(cuid())
-    name          String?
-    email         String?   @unique
-    emailVerified DateTime?
-    image         String?
-    accounts      Account[]
-    sessions      Session[]
-    posts         Post[]
 }
 
 model VerificationToken {
