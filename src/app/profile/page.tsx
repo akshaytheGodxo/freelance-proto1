@@ -7,7 +7,10 @@ import { useRouter } from "next/navigation";
 const Page = () => {
     const router = useRouter();
     const handleEmp = () => {
-        router.push("/employer_registration");
+        router.push("/authentication");
+    }
+    const handleFree = () => {
+        router.push("/freelancer_registration");
     }
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-[#2b2b2b] p-6 text-white">
@@ -39,7 +42,7 @@ const Page = () => {
                         </CardDescription>
                     </CardContent>
                     <div className="flex justify-end mt-4">
-                        <ArrowRight className="w-6 h-6 text-gray-300" />
+                        <ArrowRight className="w-6 h-6 text-gray-300" onClick={handleFree}/>
                     </div>
                 </Card>
             </div>

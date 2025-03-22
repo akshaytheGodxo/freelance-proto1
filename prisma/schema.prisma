@@ -22,19 +22,47 @@ model User {
 }
 
 model Employer {
-    id          String  @id @default(cuid())
+    id          String     @id @default(cuid())
     companyName String
-    userId      String  @unique
-    user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+    userId      String     @unique
+    user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
     jobPosts    Post[]
+    requests    Requests[]  // ✅ Added: Requests sent by the employer
 }
 
 model Freelancer {
-    id          String  @id @default(cuid())
-    userId      String  @unique
-    user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+    id          String    @id @default(cuid())
+    userId      String    @unique
+    user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+    name        String
+    rating      Float
+    rate        Float
+    experience  Int
+    projects    Int
     skills      String[]
+    education   String
+    avatar      String
+    bg          String
+    createdAt   DateTime  @default(now())
     appliedJobs AppliedJob[]
+    requests    Requests[]
+}
+
+model Requests {
+    id           String     @id @default(cuid())
+    freelancerId String
+    employerId   String
+
+    freelancer   Freelancer @relation(fields: [freelancerId], references: [id], onDelete: Cascade)
+    employer     Employer   @relation(fields: [employerId], references: [id], onDelete: Cascade)
+
+
+    amount       Int
+    deadline     String     @default("per-month")
+    title        String 
+    message      String
+    status       String     @default("pending")  // "pending", "accepted", "rejected"
+    createdAt    DateTime   @default(now())
 }
 
 model AppliedJob {
@@ -46,17 +74,15 @@ model AppliedJob {
 }
 
 model Post {
-    id        Int        @id @default(autoincrement())
-    name      String
-    createdAt DateTime   @default(now())
-    updatedAt DateTime   @updatedAt
+    id          Int        @id @default(autoincrement())
+    name        String
+    createdAt   DateTime   @default(now())
+    updatedAt   DateTime   @updatedAt
     createdById String
-    createdBy   Employer @relation(fields: [createdById], references: [id])
+    createdBy   User      @relation(fields: [createdById], references: [id])  // Fixed reference
 
     appliedJobs AppliedJob[]
-
-    user User[]
-
+    employee    Employer[]
     @@index([name])
 }
 

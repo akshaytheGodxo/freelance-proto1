@@ -7,6 +7,7 @@ import { Button } from "../_components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "../_components/ui/card";
 import { trpc } from "@/lib/trpc";
 import { useRouter } from "next/navigation";
+import bcrypt from "bcryptjs";
 const Page = () => {
     const router = useRouter();
     const { register, handleSubmit, reset } = useForm();
@@ -26,15 +27,16 @@ const Page = () => {
     const onSubmit = async (formData: any) => {
         setLoading(true);
         setMessage("");
+        const hashedPassword = await bcrypt.hash(formData.password, 10);
 
         try {
             await registerEmployer.mutateAsync({
                 company_name: formData.company_name,
                 company_mail: formData.company_mail,
-                password: formData.password,
+                password: hashedPassword
             });
 
-            router.push("")
+            router.push("/dashboard");
 
         } catch (error) {
             console.error("Registration error:", error);
