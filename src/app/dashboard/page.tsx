@@ -13,13 +13,26 @@ import { motion } from "motion/react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import EmployeContents from "../_components/ui/employee-dash";
+import FreeLanceDash from "../freelancer-dash/page";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { trpc } from "@/lib/trpc";
 export function SidebarDemo() {
   const router = useRouter();
+  const session = useSession();
   const logout = () => {
     router.push("/api/auth/signout");
   }
-
+  const email = session.data?.user.email
+  const {data: account} = trpc.main.findAccount.useQuery(
+    {email},
+    {enabled: !!email}
+  );
+  console.log(account);
+  console.log(email);
+  
+  const accountType = account?.accountType;
+  console.log(accountType);
   const links = [
     {
       label: "Dashboard",
@@ -43,15 +56,15 @@ export function SidebarDemo() {
       ),
     },
     {
-        label: "Post Acvtivity",
-        href: "/manage-jobs",
+        label: "Ongoing Projects",
+        href: "/current_projects",
         icon: (
             <IconChartLine className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200"/>
         ),
     },
     {
       label: "Logout",
-      href: "#",
+      href: "/api/auth/signout",
       icon: (
         <IconArrowLeft className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" onClick={() => logout}/>
       ),
@@ -78,7 +91,7 @@ export function SidebarDemo() {
           <div>
             <SidebarLink
               link={{
-                label: "Akshay Singh",
+                label: session.data?.user.name ?? "user",
                 href: "#",
                 icon: (
                   <Image
@@ -94,7 +107,9 @@ export function SidebarDemo() {
           </div>
         </SidebarBody>
       </Sidebar>
-      <EmployeContents />
+
+      {accountType === "Freelancer" ? <FreeLanceDash />: <EmployeContents />  }  
+      
     </div>
   );
 }

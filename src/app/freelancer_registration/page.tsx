@@ -13,8 +13,7 @@ const freelancerSchema = z.object({
   projects: z.number().min(0, "Projects cannot be negative"),
   skills: z.string().min(1, "Enter at least one skill"), // Stored as comma-separated
   education: z.string().min(2, "Education must be valid"),
-  avatar: z.string().url("Invalid avatar URL"),
-  bg: z.string().url("Invalid background URL"),
+
 });
 
 type FreelancerFormData = z.infer<typeof freelancerSchema>;
@@ -94,17 +93,8 @@ export default function FreelancerRegisterForm() {
           <p className="text-red-400">{errors.education?.message}</p>
         </div>
 
-        <div>
-          <label className="block">Avatar URL</label>
-          <input type="url" {...register("avatar")} className="w-full p-2 rounded bg-gray-700" />
-          <p className="text-red-400">{errors.avatar?.message}</p>
-        </div>
 
-        <div>
-          <label className="block">Background Image URL</label>
-          <input type="url" {...register("bg")} className="w-full p-2 rounded bg-gray-700" />
-          <p className="text-red-400">{errors.bg?.message}</p>
-        </div>
+
 
         <button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">
           Register

@@ -27,13 +27,12 @@ const Page = () => {
     const onSubmit = async (formData: any) => {
         setLoading(true);
         setMessage("");
-        const hashedPassword = await bcrypt.hash(formData.password, 10);
 
         try {
             await registerEmployer.mutateAsync({
                 company_name: formData.company_name,
                 company_mail: formData.company_mail,
-                password: hashedPassword
+                password: formData.password
             });
 
             router.push("/dashboard");

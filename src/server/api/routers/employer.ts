@@ -28,19 +28,26 @@ export const employerRouter = createTRPCRouter({
             }
 
             // Hash password before saving
-            const hashedPassword = await bcrypt.hash(password, 10);
+            
 
             // Create new employer user
             const user = await db.user.create({
                 data: {
                     email: company_mail,
                     name: company_name,
-                    password: hashedPassword,
-                    employer: { create: { companyName: company_name , } } // Create related employer entry
+                    password: password,
+                    
+                     // Create related employer entry
+                     accountType: "Employer",
                 }
             });
 
-            
+            const employer = await db.employer.create({
+                data: {
+                    companyName: company_name,
+                    userId: user.id,
+                }
+            })
 
             return {
                 message: "Employer registered successfully",
@@ -59,53 +66,95 @@ export const employerRouter = createTRPCRouter({
     }),
 
 
-     hireFreelancer  : publicProcedure
-        .input(
-            z.object({
-                freelancerId: z.string(),
-                employerId: z.string(),
-                amount: z.number(),
-                deadline: z.string().optional().default("per-month"),
-                title: z.string(),
-                message: z.string(),
-            })
-        )
-        .mutation(async ({ input }) => {
-            const { freelancerId, employerId, amount, deadline, title, message } = input;
+    hireFreelancer: publicProcedure
+    .input(
+        z.object({
+            freelancerId: z.string(),
+            employerName: z.string(),
+            amount: z.number(),
+            deadline: z.string().optional().default("per-month"),
+            title: z.string(),
+            message: z.string(),
+        })
+    )
+    .mutation(async ({ input }) => {
+        const { freelancerId, employerName, amount, deadline, title, message } = input;
 
-            // Check if employer exists
-            const employer = await db.employer.findFirst({
-                where: { userId: employerId },
-            });
+        // Check if employer exists
+        console.log("Employer Name: ", employerName);
 
-            if (!employer) {
-                throw new Error("Employer not found");
-            }
+        const employer = await db.employer.findFirst({
+            where: { companyName: employerName },
+            select: { id: true } // ✅ Select employer ID
+        });
 
-            // Create a hiring request
-            const request = await db.requests.create({
-                data: {
-                    freelancerId,
-                    employerId,
-                    amount,
-                    deadline,
-                    title,
-                    message,
-                    status: "pending",
-                },
-            });
+        if (!employer) {
+            throw new Error("Employer not found");
+        }
 
-            return request;
-        }),
+        console.log("Employer ID Found: ", employer.id);
+
+        // Create a hiring request
+        const request = await db.requests.create({
+            data: {
+                freelancerId,
+                employerId: employer.id, // ✅ Correctly assign employer ID
+                amount,
+                deadline,
+                title,
+                message,
+                status: "pending",
+            },
+        });
+
+        return request;
+    }),
 
 
 
         getEmployerByUserId: publicProcedure
         .input(z.object({ userId: z.string() }))
         .query(async ({ input }) => {
-          return await db.user.findFirst({
-            where: { id: input.userId },
+          return await db.employer.findFirst({
+            where: { userId: input.userId },
           });
         }),
-    
+        getHiredFreelancers: publicProcedure
+        .input(z.object({ employerId: z.string() }))
+        .query(async ({ input }) => {
+          return await db.projects.findMany({
+            where: { employerId: input.employerId },
+            include: { freelancer: true, milestones: true },
+          });
+        }),
+
+        addMilestone: publicProcedure
+  .input(
+    z.object({
+      projectId: z.string(),
+      description: z.string(),
+      deadline: z.date(),
+      amount: z.number(),
+    })
+  )
+  .mutation(async ({ input }) => {
+    return await db.milestone.create({
+      data: {
+        projectId: input.projectId,
+        description: input.description,
+        deadline: input.deadline,
+        amount: input.amount,
+      },
+    });
+  }),
+  approveMilestonePayment: publicProcedure
+  .input(z.object({ milestoneId: z.string() }))
+  .mutation(async ({ input }) => {
+    return await db.milestone.update({
+      where: { id: input.milestoneId },
+      data: { status: "approved" },
+    });
+  }),
+
+      
 });

@@ -18,8 +18,7 @@ export const freelancerRouter = createTRPCRouter({
                 projects: z.number().min(0, "Projects cannot be negative"),
                 skills: z.array(z.string()).nonempty("Skills cannot be empty"), // Stored as an array
                 education: z.string().min(2, "Education must be valid"),
-                avatar: z.string().url("Invalid avatar URL"),
-                bg: z.string().url("Invalid background URL"),
+                
             })
         )
         .mutation(async ({ input }) => {
@@ -33,14 +32,15 @@ export const freelancerRouter = createTRPCRouter({
             }
 
             // Hash password
-            const hashedPassword = await bcrypt.hash(input.password, 10);
+            
 
             // Create user first
             const user = await db.user.create({
                 data: {
                     name: input.name,
                     email: input.email,
-                    password: hashedPassword,
+                    password: input.password,
+                    accountType: "Freelancer",
                 },
             });
 
@@ -54,8 +54,8 @@ export const freelancerRouter = createTRPCRouter({
                     projects: input.projects,
                     skills: input.skills, // Stored as a PostgreSQL text[]
                     education: input.education,
-                    avatar: input.avatar,
-                    bg: input.bg,
+                    avatar: "/john.webp",
+                    bg: "/bg1.png",
                     user: {
                         connect: { id: user.id }, // Linking freelancer to the user
                     },
@@ -83,5 +83,162 @@ export const freelancerRouter = createTRPCRouter({
   
               return freelancer;
           }),
-          
+
+          getOffers: publicProcedure
+          .input(
+            z.object({
+              email: z.string().email(),
+            })
+          )
+          .query(async ({ input }) => {
+            try {
+              // Get freelancer ID from User's email
+              const freelancer = await db.user.findUnique({
+                where: { email: input.email },
+                select: { freelancer: { select: { id: true } } },
+              });
+      
+              if (!freelancer?.freelancer) {
+                throw new Error("Freelancer profile not found");
+              }
+      
+              // Fetch requests (offers) for this freelancer
+              const offers = await db.requests.findMany({
+                where: { freelancerId: freelancer.freelancer.id, status: "pending" },
+                select: {
+                  id: true,
+                  title: true,
+                  message: true,
+                  amount: true,
+                  deadline: true,
+                  employer: {
+                    select: {
+                      companyName: true,
+                    },
+                  },
+                  createdAt: true,
+                },
+                orderBy: { createdAt: "desc" },
+              });
+      
+              return offers;
+            } catch (error) {
+              console.error("Error fetching offers:", error);
+              throw new Error("Failed to fetch offers");
+            }
+          }),
+      
+          acceptOffer: publicProcedure
+          .input(
+            z.object({
+              offerId: z.string(),
+            })
+          )
+          .mutation(async ({ input }) => {
+            try {
+              // Get the offer details
+              const offer = await db.requests.findUnique({
+                where: { id: input.offerId },
+                include: { freelancer: true, employer: true },
+              });
+        
+              if (!offer) throw new Error("Offer not found");
+        
+              // Create a new project
+              await db.projects.create({
+                data: {
+                  freelancerId: offer.freelancerId,
+                  employerId: offer.employerId,
+                  title: offer.title,
+                  description: offer.message,
+                  amount: offer.amount,
+                  deadline: offer.deadline,
+                },
+              });
+        
+              // Mark the offer as accepted
+              await db.requests.update({
+                where: { id: input.offerId },
+                data: { status: "accepted" },
+              });
+        
+              return { success: true, message: "Offer accepted and project created!" };
+            } catch (error) {
+              console.error("Error accepting offer:", error);
+              throw new Error("Failed to accept offer");
+            }
+          }),
+        
+        denyOffer: publicProcedure
+          .input(
+            z.object({
+              offerId: z.string(),
+            })
+          )
+          .mutation(async ({ input }) => {
+            try {
+              await db.requests.update({
+                where: { id: input.offerId },
+                data: { status: "rejected" },
+              });
+      
+              return { success: true, message: "Offer rejected!" };
+            } catch (error) {
+              console.error("Error rejecting offer:", error);
+              throw new Error("Failed to reject offer");
+            }
+          }),
+      
+          getProjects: publicProcedure
+          .input(
+            z.object({
+              email: z.string().email(),
+            })
+          )
+          .query(async ({ input }) => {
+            try {
+              // Get Freelancer ID
+              const freelancer = await db.user.findUnique({
+                where: { email: input.email },
+                select: { freelancer: { select: { id: true } } },
+              });
+        
+              if (!freelancer?.freelancer) {
+                throw new Error("Freelancer profile not found");
+              }
+        
+              // Fetch projects linked to this freelancer
+              const projects = await db.projects.findMany({
+                where: { freelancerId: freelancer.freelancer.id },
+                orderBy: { createdAt: "desc" },
+              });
+        
+              return projects;
+            } catch (error) {
+              console.error("Error fetching projects:", error);
+              throw new Error("Failed to fetch projects");
+            }
+          }),
+          getMilestones: publicProcedure
+          .input(z.object({ freelancerId: z.string() }))
+          .query(async ({ input }) => {
+            return await db.milestone.findMany({
+              where: {
+                project: {
+                  freelancerId: input.freelancerId,
+                },
+              },
+            });
+          }),
+
+          markMilestoneComplete: publicProcedure
+  .input(z.object({ milestoneId: z.string() }))
+  .mutation(async ({ input }) => {
+    return await db.milestone.update({
+      where: { id: input.milestoneId },
+      data: { status: "completed" },
+    });
+  }),
+
+        
 });
