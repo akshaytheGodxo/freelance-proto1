@@ -1,0 +1,10 @@
+[lcl-host]
+realm-apid = 'localhost'
+
+[org]
+apid = 'akshaythegodxo'
+
+[service]
+apid = 'freelance'
+category = 'javascript'
+cert-style = 'acme'

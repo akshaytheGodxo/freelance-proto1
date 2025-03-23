@@ -1,12 +1,12 @@
 "use client";
-import React from "react";
+import React, {useState} from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/app/_components/ui/card";
 import { Button } from "@/app/_components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/app/_components/ui/tabs";
 import { useSession } from "next-auth/react";
 import { trpc } from "@/lib/trpc";
 import { motion } from "framer-motion";
-
+import {Bell, BellDot} from "lucide-react";
 const FreeLanceDash = () => {
   const { data: session } = useSession();
   const email = session?.user?.email;
@@ -20,6 +20,7 @@ const FreeLanceDash = () => {
   // Accept / Deny Offer
   const acceptOffer = trpc.frel.acceptOffer.useMutation();
   const denyOffer = trpc.frel.denyOffer.useMutation();
+  const [showNotifications, setShowNotifications] = useState(false);
 
   const handleAccept = (offerId: string) => {
     acceptOffer.mutate({ offerId });
@@ -66,7 +67,30 @@ const FreeLanceDash = () => {
 >
   Projects
 </TabsTrigger>
-
+<Button
+            variant="ghost"
+            className="ml-auto relative"
+            onClick={() => setShowNotifications(!showNotifications)}
+          >
+            <Bell />
+            {showNotifications && (
+              <motion.div
+                className="absolute right-0 mt-2 w-72 bg-neutral-800 text-white p-4 rounded-lg shadow-lg"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                <Card className="bg-neutral-700 text-white shadow-lg">
+                  <CardHeader>
+                    <CardTitle>New Notification</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-gray-300">You have recieved your payment.</p>
+                    <p className="text-gray-500 text-sm">Now</p>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
+          </Button>
         </TabsList>
 
         {/* Overview Section */}

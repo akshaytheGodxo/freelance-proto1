@@ -22,14 +22,46 @@ const MilestoneForm = ({ projectId, onClose }: { projectId: string; onClose: () 
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-md">
-      <div className="bg-neutral-900 p-6 rounded-lg shadow-lg max-w-md w-full">
-        <h2 className="text-lg font-semibold mb-4">Add Milestone</h2>
-        <input type="text" placeholder="Description" onChange={(e) => setFormData({ ...formData, description: e.target.value })} />
-        <input type="date" onChange={(e) => setFormData({ ...formData, deadline: e.target.value })} />
-        <input type="number" placeholder="Amount" onChange={(e) => setFormData({ ...formData, amount: e.target.value })} />
-        <Button onClick={handleSubmit} className="mt-4 w-full">Submit</Button>
-        <Button onClick={onClose} className="mt-2 w-full bg-gray-700">Cancel</Button>
+    <div className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-md z-50">
+      <div className="bg-neutral-900 p-6 rounded-lg shadow-lg w-full max-w-md">
+        {/* Header */}
+        <h2 className="text-lg font-semibold text-white mb-4 text-center">Add Milestone</h2>
+
+        {/* Form Fields */}
+        <div className="space-y-3">
+          <input
+            type="text"
+            placeholder="Milestone Description"
+            value={formData.description}
+            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+            className="w-full p-2 rounded-md bg-neutral-700 border border-gray-600 text-white placeholder-gray-400 focus:ring-blue-500"
+          />
+
+          <input
+            type="date"
+            value={formData.deadline}
+            onChange={(e) => setFormData({ ...formData, deadline: e.target.value })}
+            className="w-full p-2 rounded-md bg-neutral-700 border border-gray-600 text-white focus:ring-blue-500"
+          />
+
+          <input
+            type="number"
+            placeholder="Amount ($)"
+            value={formData.amount}
+            onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+            className="w-full p-2 rounded-md bg-neutral-700 border border-gray-600 text-white placeholder-gray-400 focus:ring-blue-500"
+          />
+        </div>
+
+        {/* Buttons */}
+        <div className="flex justify-between mt-5">
+          <Button className="bg-blue-600 hover:bg-blue-700 w-full mr-2" onClick={handleSubmit}>
+            Submit
+          </Button>
+          <Button className="bg-gray-700 w-full ml-2" onClick={onClose}>
+            Cancel
+          </Button>
+        </div>
       </div>
     </div>
   );

@@ -20,6 +20,7 @@ model User {
     posts         Post[]
     employer      Employer?
     freelancer    Freelancer?
+    notifications Notification[]
 }
 
 model Employer {
@@ -30,12 +31,13 @@ model Employer {
     jobPosts    Post[]
     requests    Requests[]  // ✅ Added: Requests sent by the employer
     currentProjects Projects[]
+    payment      Payment[]
 }
 
 model Freelancer {
-    id          String    @id @default(cuid())
-    userId      String    @unique
-    user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+    id          String       @id @default(cuid())
+    userId      String       @unique
+    user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
     name        String
     rating      Float
     rate        Float
@@ -46,9 +48,11 @@ model Freelancer {
     avatar      String
     bg          String
     createdAt   DateTime  @default(now())
+    payment     Payment[]
     appliedJobs AppliedJob[]
     requests    Requests[]
     currentProjects Projects[]
+    notifications Notification[] // ✅ Now connected to notifications
 }
 
 model Requests {
@@ -93,8 +97,34 @@ model Milestone {
     deadline     DateTime
     amount       Int
     status       String   @default("pending") // "pending", "completed"
-    
     project      Projects @relation(fields: [projectId], references: [id], onDelete: Cascade)
+    payment      Payment[]
+}
+
+model Payment {
+  id          String   @id @default(cuid())
+  milestoneId String   @unique
+  freelancerId String
+  employerId  String
+  amount      Int
+  status      String   @default("pending") // "pending", "completed"
+  createdAt   DateTime @default(now())
+
+  milestone   Milestone @relation(fields: [milestoneId], references: [id], onDelete: Cascade)
+  freelancer  Freelancer @relation(fields: [freelancerId], references: [id], onDelete: Cascade)
+  employer    Employer @relation(fields: [employerId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id            String     @id @default(cuid())
+  userId        String?
+  freelancerId  String?
+  message       String
+  status        String     @default("unread") // "unread", "read"
+  createdAt     DateTime   @default(now())
+
+  user          User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  freelancer    Freelancer? @relation(fields: [freelancerId], references: [id], onDelete: Cascade)
 }
 
 

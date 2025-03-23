@@ -113,7 +113,7 @@ const EmployeeContents = () => {
               </CardContent>
 
               <CardFooter className="border-t pt-4">
-                <button className="w-full bg-primary text-primary-foreground bg-black text-white py-2 rounded-md transition-colors"                   onClick={() => handleProfile(freelancer.id)} 
+                <button className="w-full bg-primary text-primary-foreground bg-black text-white py-2 rounded-md transition-colors"  onClick={() => handleProfile(freelancer.id)} 
                 >
                   View Profile
                 </button>
