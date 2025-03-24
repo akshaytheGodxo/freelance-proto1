@@ -2,8 +2,19 @@
 import { Button } from "@/app/_components/ui/button";
 import { Card, CardContent } from "@/app/_components/ui/card";
 import * as motion from "framer-motion";
+import {useSession} from "next-auth/react"; 
+import { useRouter } from "next/navigation";
+const LandingPage = () => {
 
- const LandingPage = () => {
+  const router = useRouter();
+  const {data: session, status} = useSession();
+  const handleRoute = () => {
+  if (session?.user && status == "authenticated") {
+    router.push("/dashboard");
+  } else {
+    router.push("/profile");
+  }
+  }
   return (
     <div className="min-h-screen bg-[#2b2b2b] text-white flex flex-col items-center justify-center p-6">
       {/* <motion.h1
@@ -17,7 +28,7 @@ import * as motion from "framer-motion";
       <p className="text-lg text-center max-w-2xl mb-6">
         A powerful, all-in-one platform to track your projects, clients, and finances effortlessly.
       </p>
-      <Button className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-xl text-lg">
+      <Button className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-xl text-lg" onClick={handleRoute}>
         Get Started
       </Button>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
