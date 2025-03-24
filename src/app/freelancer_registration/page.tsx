@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useState } from "react";
 import { trpc } from "@/lib/trpc";
+import { useRouter } from "next/navigation";
 const freelancerSchema = z.object({
   name: z.string().min(2, "Name is too short"),
   email: z.string().email("Invalid email"),
@@ -19,6 +20,8 @@ const freelancerSchema = z.object({
 type FreelancerFormData = z.infer<typeof freelancerSchema>;
 
 export default function FreelancerRegisterForm() {
+
+  const router = useRouter();
   const [errorMessage, setErrorMessage] = useState("");
   const { register, handleSubmit, formState: { errors } } = useForm<FreelancerFormData>({
     resolver: zodResolver(freelancerSchema),
@@ -36,6 +39,8 @@ export default function FreelancerRegisterForm() {
     } catch (error) {
       setErrorMessage(error.message || "Something went wrong!");
     }
+
+    router.push("/api/auth/signin");
   };
 
   return (

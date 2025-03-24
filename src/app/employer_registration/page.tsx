@@ -35,7 +35,7 @@ const Page = () => {
                 password: formData.password
             });
 
-            router.push("/dashboard");
+            router.push("/api/auth/signin");
 
         } catch (error) {
             console.error("Registration error:", error);
